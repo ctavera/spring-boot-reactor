@@ -13,13 +13,14 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         //Creates an Stream Flux Observable
-        Flux<User> names = Flux.just("Andrew", "Peter", "Marie", "Derek", "Jhon")
-                .map(name -> new User(name.toUpperCase(), null))
+        Flux<User> names = Flux.just("Andrew Garfield", "Peter Parker", "Marie Curie", "Derek Smith", "Jhon Doe", "Bruce Lee", "Bruce Willis")
+                .map(name -> new User(name.split(" ")[0].toUpperCase(), name.split(" ")[1].toUpperCase()))
+                .filter(user -> user.getFirstName().toLowerCase().equals("bruce"))
                 .doOnNext(user -> {
                     if (user == null) {
                         throw new RuntimeException("Nombres no pueden ser vacíos.");
                     }
-                    System.out.println(user.getFirstName());
+                    System.out.println(user.getFirstName().concat(" ").concat(user.getLastName()));
                 })
                 .map(user -> {
                     String name = user.getFirstName().toLowerCase();
