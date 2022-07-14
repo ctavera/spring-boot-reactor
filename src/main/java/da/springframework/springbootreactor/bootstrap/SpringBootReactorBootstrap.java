@@ -12,6 +12,8 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
@@ -31,7 +33,8 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 //        zipWithRangesExample();
 //        intervalExample();
 //        delayElementsExample();
-        infitineIntervalExample();
+//        infitineIntervalExample();
+        fromCreateIntervalExample();
     }
 
     public void iterableExample() throws Exception {
@@ -247,5 +250,36 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                 .subscribe(text -> log.info(text), error -> log.error(error.getMessage()));
 
         countDownLatch.await();
+    }
+
+    public void fromCreateIntervalExample () {
+
+        Flux.create(emitter -> {
+                    Timer timer = new Timer();
+                    timer.schedule(new TimerTask() {
+
+                        private Integer count = 0;
+
+                        @Override
+                        public void run() {
+                            emitter.next(++count);
+                            if (count == 10) {
+                                timer.cancel();
+                                emitter.complete();
+                            }
+
+                            if (count == 5) {
+                                timer.cancel();
+                                emitter.error(new InterruptedException("Error, se ha detenido el flux en 5!")); //for testing error
+                            }
+                        }
+                    }, 1000, 1000);
+                })
+//                .doOnNext(next -> log.info(next.toString()))
+//                .doOnComplete(() -> log.info("Hemos terminado"))
+//                .subscribe();
+                .subscribe(next -> log.info(next.toString()),
+                        error -> log.error(error.getMessage()),
+                        () -> log.info("Hemos terminado")); //any form
     }
 }
