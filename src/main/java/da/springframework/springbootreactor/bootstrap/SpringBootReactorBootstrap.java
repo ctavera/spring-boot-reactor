@@ -13,8 +13,9 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         //Creates an Stream Flux Observable
-        Flux<User> names = Flux.just("Andrew Garfield", "Peter Parker", "Marie Curie", "Derek Smith", "Jhon Doe", "Bruce Lee", "Bruce Willis")
-                .map(name -> new User(name.split(" ")[0].toUpperCase(), name.split(" ")[1].toUpperCase()))
+        Flux<String> names = Flux.just("Andrew Garfield", "Peter Parker", "Marie Curie", "Derek Smith", "Jhon Doe", "Bruce Lee", "Bruce Willis");
+
+        Flux<User> users = names.map(name -> new User(name.split(" ")[0].toUpperCase(), name.split(" ")[1].toUpperCase()))
                 .filter(user -> user.getFirstName().toLowerCase().equals("bruce"))
                 .doOnNext(user -> {
                     if (user == null) {
@@ -28,7 +29,7 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                     return user;
                 });
 
-        names.subscribe(user -> log.info(user.toString()),
+        users.subscribe(user -> log.info(user.toString()),
                 error -> log.error(error.getMessage()),
                 () -> log.info("Ha finalizado la ejecución del observable con éxito!")); //new Runnable() {@Override public void run() {...}});
     }
