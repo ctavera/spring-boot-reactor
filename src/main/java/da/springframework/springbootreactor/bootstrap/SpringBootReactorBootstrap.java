@@ -25,7 +25,8 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 //        collectListExample();
 //        userCommentFlatMapExample();
 //        userCommentZipWithExample();
-        userCommentZipWithExample2();
+//        userCommentZipWithExample2();
+        zipWithRangesExample();
     }
 
     public void iterableExample() throws Exception {
@@ -193,5 +194,15 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                 });
 
         userCommentMono.subscribe(userComment -> log.info(userComment.toString()));
+    }
+
+    public void zipWithRangesExample() throws Exception {
+
+        Flux<Integer> ranges = Flux.range(0, 4);
+
+        Flux.just(1, 2, 3, 4)
+                .map(i -> (i*2))
+                .zipWith(ranges, (stream1, stream2) -> String.format("Primer Flux: %d, Segundo Flux: %d", stream1, stream2))
+                .subscribe(text -> log.info(text));
     }
 }
