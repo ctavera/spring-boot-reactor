@@ -19,7 +19,8 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 
 //        iterableExample();
 //        flatMapExample();
-        toStringExample();
+//        toStringExample();
+        collectListExample();
     }
 
     public void iterableExample() throws Exception {
@@ -108,5 +109,26 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                 })
                 .map(name -> name.toLowerCase())
                 .subscribe(name -> log.info(name));
+    }
+
+    public void collectListExample() throws Exception {
+
+        List<User> users = new ArrayList<>();
+        users.add(new User("Andrew", "Garfield"));
+        users.add(new User("Peter", "Parker"));
+        users.add(new User("Marie", "Curie"));
+        users.add(new User("Derek", "Smith"));
+        users.add(new User("Jhon", "Doe"));
+        users.add(new User("Bruce", "Lee"));
+        users.add(new User("Bruce", "Willis"));
+
+        //Creates an Stream Flux Observable
+        Flux.fromIterable(users)
+                .collectList()
+                .subscribe(list -> {
+                    list.forEach(item -> {
+                        log.info(item.toString());
+                    });
+                });
     }
 }
