@@ -4,6 +4,8 @@ import da.springframework.springbootreactor.model.Comment;
 import da.springframework.springbootreactor.model.User;
 import da.springframework.springbootreactor.model.UserComment;
 import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -34,7 +36,8 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 //        intervalExample();
 //        delayElementsExample();
 //        infitineIntervalExample();
-        fromCreateIntervalExample();
+//        fromCreateIntervalExample();
+        backpressureExample();
     }
 
     public void iterableExample() throws Exception {
@@ -86,7 +89,7 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
         Flux.fromIterable(userNames)
                 .map(name -> new User(name.split(" ")[0].toUpperCase(), name.split(" ")[1].toUpperCase()))
                 .flatMap(user -> {
-                    if(user.getFirstName().equalsIgnoreCase("bruce")){
+                    if (user.getFirstName().equalsIgnoreCase("bruce")) {
                         return Mono.just(user);
                     } else {
                         return Mono.empty();
@@ -115,7 +118,7 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
         Flux.fromIterable(users)
                 .map(user -> user.getFirstName().toUpperCase().concat(" ").concat(user.getLastName().toUpperCase()))
                 .flatMap(name -> {
-                    if(name.contains("bruce".toUpperCase())){
+                    if (name.contains("bruce".toUpperCase())) {
                         return Mono.just(name);
                     } else {
                         return Mono.empty();
@@ -209,12 +212,12 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
         Flux<Integer> ranges = Flux.range(0, 4);
 
         Flux.just(1, 2, 3, 4)
-                .map(i -> (i*2))
+                .map(i -> (i * 2))
                 .zipWith(ranges, (stream1, stream2) -> String.format("Primer Flux: %d, Segundo Flux: %d", stream1, stream2))
                 .subscribe(text -> log.info(text));
     }
 
-    public void intervalExample () {
+    public void intervalExample() {
         Flux<Integer> range = Flux.range(1, 12);
         Flux<Long> delay = Flux.interval(Duration.ofSeconds(1));
 
@@ -224,7 +227,7 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                 .blockLast(); //Subscribe and block for visualize the fluxes, not recomended
     }
 
-    public void delayElementsExample () {
+    public void delayElementsExample() {
         Flux<Integer> range = Flux.range(1, 12)
                 .delayElements(Duration.ofSeconds(1))
                 .doOnNext(i -> log.info(i.toString()));
@@ -233,14 +236,14 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
         range.blockLast(); //Subscribe and block for visualize the fluxes, not recomended
     }
 
-    public void infitineIntervalExample () throws InterruptedException {
+    public void infitineIntervalExample() throws InterruptedException {
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
         Flux.interval(Duration.ofSeconds(1))
                 .doOnTerminate(countDownLatch::countDown)
                 .flatMap(i -> {
-                    if (i >=5) {
+                    if (i >= 5) {
                         return Flux.error(new InterruptedException("Solo hasta 5!"));
                     }
                     return Flux.just(i);
@@ -252,7 +255,7 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
         countDownLatch.await();
     }
 
-    public void fromCreateIntervalExample () {
+    public void fromCreateIntervalExample() {
 
         Flux.create(emitter -> {
                     Timer timer = new Timer();
@@ -281,5 +284,44 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                 .subscribe(next -> log.info(next.toString()),
                         error -> log.error(error.getMessage()),
                         () -> log.info("Hemos terminado")); //any form
+    }
+
+    public void backpressureExample() {
+
+        Flux.range(1,10)
+                .log()
+//                .limitRate(5) //the same as new Subscriber...
+//                .subscribe();
+                .subscribe(new Subscriber<>() {
+
+                    private Subscription subs;
+                    private Integer limit = 5;
+                    private Integer consumed = 0;
+                    @Override
+                    public void onSubscribe(Subscription subscription) {
+                        this.subs = subscription;
+                        subs.request(limit);
+                    }
+
+                    @Override
+                    public void onNext(Integer integer) {
+                        log.info(integer.toString());
+                        consumed++;
+                        if (consumed == limit) {
+                            consumed = 0;
+                            subs.request(limit);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 }
