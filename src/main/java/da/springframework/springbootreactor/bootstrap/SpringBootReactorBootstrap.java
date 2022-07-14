@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 @Slf4j
 @Component
@@ -29,7 +30,8 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 //        userCommentZipWithExample2();
 //        zipWithRangesExample();
 //        intervalExample();
-        delayElementsExample();
+//        delayElementsExample();
+        infitineIntervalExample();
     }
 
     public void iterableExample() throws Exception {
@@ -226,5 +228,24 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 
 //        range.subscribe(); //right way - non blocking
         range.blockLast(); //Subscribe and block for visualize the fluxes, not recomended
+    }
+
+    public void infitineIntervalExample () throws InterruptedException {
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        Flux.interval(Duration.ofSeconds(1))
+                .doOnTerminate(countDownLatch::countDown)
+                .flatMap(i -> {
+                    if (i >=5) {
+                        return Flux.error(new InterruptedException("Solo hasta 5!"));
+                    }
+                    return Flux.just(i);
+                })
+                .map(i -> "Hello " + i)
+                .retry(2)
+                .subscribe(text -> log.info(text), error -> log.error(error.getMessage()));
+
+        countDownLatch.await();
     }
 }
