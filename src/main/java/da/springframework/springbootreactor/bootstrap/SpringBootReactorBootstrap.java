@@ -18,7 +18,8 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
 //        iterableExample();
-        flatMapExample();
+//        flatMapExample();
+        toStringExample();
     }
 
     public void iterableExample() throws Exception {
@@ -54,6 +55,7 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                 error -> log.error(error.getMessage()),
                 () -> log.info("Ha finalizado la ejecución del observable con éxito!")); //new Runnable() {@Override public void run() {...}});
     }
+
     public void flatMapExample() throws Exception {
 
         List<String> userNames = new ArrayList<>();
@@ -81,5 +83,30 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                     return user;
                 })
                 .subscribe(user -> log.info(user.toString()));
+    }
+
+    public void toStringExample() throws Exception {
+
+        List<User> users = new ArrayList<>();
+        users.add(new User("Andrew", "Garfield"));
+        users.add(new User("Peter", "Parker"));
+        users.add(new User("Marie", "Curie"));
+        users.add(new User("Derek", "Smith"));
+        users.add(new User("Jhon", "Doe"));
+        users.add(new User("Bruce", "Lee"));
+        users.add(new User("Bruce", "Willis"));
+
+        //Creates an Stream Flux Observable
+        Flux.fromIterable(users)
+                .map(user -> user.getFirstName().toUpperCase().concat(" ").concat(user.getLastName().toUpperCase()))
+                .flatMap(name -> {
+                    if(name.contains("bruce".toUpperCase())){
+                        return Mono.just(name);
+                    } else {
+                        return Mono.empty();
+                    }
+                })
+                .map(name -> name.toLowerCase())
+                .subscribe(name -> log.info(name));
     }
 }
