@@ -1,6 +1,8 @@
 package da.springframework.springbootreactor.bootstrap;
 
+import da.springframework.springbootreactor.model.Comment;
 import da.springframework.springbootreactor.model.User;
+import da.springframework.springbootreactor.model.UserComment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -20,7 +22,8 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 //        iterableExample();
 //        flatMapExample();
 //        toStringExample();
-        collectListExample();
+//        collectListExample();
+        userCommentFlatMapExample();
     }
 
     public void iterableExample() throws Exception {
@@ -130,5 +133,22 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                         log.info(item.toString());
                     });
                 });
+    }
+
+    public void userCommentFlatMapExample() throws Exception {
+
+        Mono<User> userMono = Mono.fromCallable(() -> new User("Jhon", "Doe"));
+
+        Mono<Comment> commentMono = Mono.fromCallable(() -> {
+            Comment comment = new Comment();
+            comment.addComment("This is an example");
+            comment.addComment("of combine two Flux");
+            comment.addComment("on one Flux");
+
+            return comment;
+        });
+
+        userMono.flatMap(user -> commentMono.map(comment -> new UserComment(user, comment)))
+                .subscribe(userComment -> log.info(userComment.toString()));
     }
 }
