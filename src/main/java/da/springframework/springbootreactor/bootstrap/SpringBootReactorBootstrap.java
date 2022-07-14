@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,12 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+
+//        iterableExample();
+        flatMapExample();
+    }
+
+    public void iterableExample() throws Exception {
 
         List<String> userNames = new ArrayList<>();
         userNames.add("Andrew Garfield");
@@ -30,7 +37,7 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
         Flux<String> names = Flux.fromIterable(userNames);
 
         Flux<User> users = names.map(name -> new User(name.split(" ")[0].toUpperCase(), name.split(" ")[1].toUpperCase()))
-                .filter(user -> user.getFirstName().toLowerCase().equals("bruce"))
+                .filter(user -> user.getFirstName().equalsIgnoreCase("bruce"))
                 .doOnNext(user -> {
                     if (user == null) {
                         throw new RuntimeException("Nombres no pueden ser vacíos.");
@@ -46,5 +53,33 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
         users.subscribe(user -> log.info(user.toString()),
                 error -> log.error(error.getMessage()),
                 () -> log.info("Ha finalizado la ejecución del observable con éxito!")); //new Runnable() {@Override public void run() {...}});
+    }
+    public void flatMapExample() throws Exception {
+
+        List<String> userNames = new ArrayList<>();
+        userNames.add("Andrew Garfield");
+        userNames.add("Peter Parker");
+        userNames.add("Marie Curie");
+        userNames.add("Derek Smith");
+        userNames.add("Jhon Doe");
+        userNames.add("Bruce Lee");
+        userNames.add("Bruce Willis");
+
+        //Creates an Stream Flux Observable
+        Flux.fromIterable(userNames)
+                .map(name -> new User(name.split(" ")[0].toUpperCase(), name.split(" ")[1].toUpperCase()))
+                .flatMap(user -> {
+                    if(user.getFirstName().equalsIgnoreCase("bruce")){
+                        return Mono.just(user);
+                    } else {
+                        return Mono.empty();
+                    }
+                })
+                .map(user -> {
+                    String name = user.getFirstName().toLowerCase();
+                    user.setFirstName(name);
+                    return user;
+                })
+                .subscribe(user -> log.info(user.toString()));
     }
 }
