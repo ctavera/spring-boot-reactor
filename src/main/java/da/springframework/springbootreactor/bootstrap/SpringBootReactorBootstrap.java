@@ -23,7 +23,9 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 //        flatMapExample();
 //        toStringExample();
 //        collectListExample();
-        userCommentFlatMapExample();
+//        userCommentFlatMapExample();
+//        userCommentZipWithExample();
+        userCommentZipWithExample2();
     }
 
     public void iterableExample() throws Exception {
@@ -150,5 +152,46 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 
         userMono.flatMap(user -> commentMono.map(comment -> new UserComment(user, comment)))
                 .subscribe(userComment -> log.info(userComment.toString()));
+    }
+
+    public void userCommentZipWithExample() throws Exception {
+
+        Mono<User> userMono = Mono.fromCallable(() -> new User("Jhon", "Doe"));
+
+        Mono<Comment> commentMono = Mono.fromCallable(() -> {
+            Comment comment = new Comment();
+            comment.addComment("This is an example");
+            comment.addComment("of combine two Flux");
+            comment.addComment("on one Flux");
+
+            return comment;
+        });
+
+        Mono<UserComment> userCommentMono = userMono.zipWith(commentMono, ((user, comment) -> new UserComment(user, comment)));
+        userCommentMono.subscribe(userComment -> log.info(userComment.toString()));
+    }
+
+    public void userCommentZipWithExample2() throws Exception {
+
+        Mono<User> userMono = Mono.fromCallable(() -> new User("Jhon", "Doe"));
+
+        Mono<Comment> commentMono = Mono.fromCallable(() -> {
+            Comment comment = new Comment();
+            comment.addComment("This is an example");
+            comment.addComment("of combine two Flux");
+            comment.addComment("on one Flux");
+
+            return comment;
+        });
+
+        Mono<UserComment> userCommentMono = userMono.zipWith(commentMono)
+                .map(tuple -> {
+                    User user = tuple.getT1();
+                    Comment comment = tuple.getT2();
+
+                    return new UserComment(user, comment);
+                });
+
+        userCommentMono.subscribe(userComment -> log.info(userComment.toString()));
     }
 }
