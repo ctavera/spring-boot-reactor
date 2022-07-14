@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,9 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
 //        userCommentFlatMapExample();
 //        userCommentZipWithExample();
 //        userCommentZipWithExample2();
-        zipWithRangesExample();
+//        zipWithRangesExample();
+//        intervalExample();
+        delayElementsExample();
     }
 
     public void iterableExample() throws Exception {
@@ -204,5 +207,24 @@ public class SpringBootReactorBootstrap implements CommandLineRunner {
                 .map(i -> (i*2))
                 .zipWith(ranges, (stream1, stream2) -> String.format("Primer Flux: %d, Segundo Flux: %d", stream1, stream2))
                 .subscribe(text -> log.info(text));
+    }
+
+    public void intervalExample () {
+        Flux<Integer> range = Flux.range(1, 12);
+        Flux<Long> delay = Flux.interval(Duration.ofSeconds(1));
+
+        range.zipWith(delay, (ra, de) -> ra)
+                .doOnNext(i -> log.info(i.toString()))
+//                .subscribe(); //right way - non blocking
+                .blockLast(); //Subscribe and block for visualize the fluxes, not recomended
+    }
+
+    public void delayElementsExample () {
+        Flux<Integer> range = Flux.range(1, 12)
+                .delayElements(Duration.ofSeconds(1))
+                .doOnNext(i -> log.info(i.toString()));
+
+//        range.subscribe(); //right way - non blocking
+        range.blockLast(); //Subscribe and block for visualize the fluxes, not recomended
     }
 }
